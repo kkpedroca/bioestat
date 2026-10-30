@@ -1,37 +1,40 @@
-# BioEstat — versão com backend estatístico SciPy
+# BioEstat — versão aprimorada para Render
 
-Esta versão mantém a interface HTML e transfere os cálculos para um backend Python.
-Não utiliza IA generativa: testes estatísticos devem ser calculados por algoritmos
-determinísticos e validados, não por um modelo de linguagem. O backend utiliza SciPy.
+Aplicação web de testes estatísticos com backend Python, Flask e SciPy.
+A interface inclui gráficos interativos com Chart.js.
 
-## Requisitos
-- Python 3.10 ou superior
-- Internet na primeira instalação para baixar Flask, SciPy e NumPy
+## Testes disponíveis
+- Shapiro–Wilk: estatística W, p-valor, resumo descritivo e gráfico Q–Q.
+- Kruskal–Wallis: estatística H, p-valor, graus de liberdade, correção para empates, postos médios, medianas e gráfico.
+- Exato de Fisher: odds ratio, p-valor bilateral ou unilateral e gráfico de proporções.
 
-## Executar no Windows
-1. Extraia o ZIP e abra o terminal dentro da pasta `bioestat_robusto`.
-2. Crie o ambiente: `py -m venv .venv`
-3. Ative no PowerShell: `.venv\Scripts\Activate.ps1`
-   ou no CMD: `.venv\Scripts\activate.bat`
-4. Instale: `py -m pip install -r requirements.txt`
-5. Inicie: `py app.py`
-6. Abra: http://127.0.0.1:5000
+## Executar localmente (Windows)
+1. Extraia o ZIP.
+2. Abra o terminal dentro desta pasta.
+3. Crie o ambiente: `py -m venv .venv`
+4. Ative: `.venv\Scripts\Activate.ps1`
+5. Instale: `py -m pip install -r requirements.txt`
+6. Inicie: `py app.py`
+7. Acesse `http://127.0.0.1:5000`.
 
-## macOS/Linux
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
-```
-Acesse http://127.0.0.1:5000.
+## Publicar no Render
+Crie um Web Service conectado ao repositório GitHub que contenha estes arquivos na raiz.
 
-## Implementações
-- Shapiro–Wilk: `scipy.stats.shapiro` (até 5.000 observações).
-- Kruskal–Wallis: `scipy.stats.kruskal`, com correção para empates.
-- Exato de Fisher: `scipy.stats.fisher_exact`, com opções bilateral e unilateral.
-- Validação de entradas no servidor e mensagens de erro.
+- Language: Python 3
+- Root Directory: deixe vazio
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `gunicorn app:app --bind 0.0.0.0:$PORT`
+- Instance Type: Free ou outro plano desejado
 
-Importante: não abra `index.html` diretamente com duplo clique. Inicie o servidor
-e acesse pelo endereço local acima. Para pesquisa/publicação, registre as versões
-do software e avalie os pressupostos e o plano estatístico do estudo.
+O endpoint `/api/health` informa se o backend está ativo e mostra a versão do SciPy.
+
+## Observações estatísticas
+- Shapiro–Wilk: o aplicativo limita a amostra a 5.000 observações; para amostras acima desse limite, a precisão do p-valor do SciPy também merece atenção.
+- Kruskal–Wallis: a significância indica diferença entre pelo menos dois grupos; não identifica quais pares diferem. Um pós-teste apropriado pode ser necessário.
+- Exato de Fisher: a interpretação do odds ratio depende da organização das linhas e colunas da tabela. A opção bilateral é a configuração padrão.
+- A ferramenta auxilia a análise, mas não substitui a avaliação dos pressupostos, do desenho do estudo e do plano estatístico.
+
+## Arquivos
+- `app.py`: API Flask e cálculos SciPy.
+- `index.html`: interface e gráficos.
+- `requirements.txt`: dependências.

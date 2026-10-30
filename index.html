@@ -3,131 +3,229 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BioEstat — Testes estatísticos</title>
+<title>BioEstat — Calculadora & Gráficos Estatísticos</title>
+<!-- Script para renderização de gráficos Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--ink:#17243a;--muted:#68758a;--line:#e3e9f1;--blue:#315efb;--blue2:#eaf0ff;--green:#16845b;--red:#c04444;--shadow:0 12px 35px rgba(25,45,80,.07)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
 header{background:linear-gradient(120deg,#172b55,#315efb);color:white;padding:30px 22px 65px}
-.wrap{max-width:1050px;margin:auto}header .eyebrow{font-size:12px;letter-spacing:.13em;text-transform:uppercase;opacity:.8;font-weight:700}h1{font-size:clamp(27px,4vw,38px);line-height:1.15;margin:8px 0}header p{max-width:650px;color:#e0e8ff;margin:10px 0 0}
-main{max-width:1050px;margin:-36px auto 50px;padding:0 18px}.tabs{display:flex;gap:8px;flex-wrap:wrap;background:var(--card);padding:9px;border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)}
+.wrap{max-width:1150px;margin:auto}header .eyebrow{font-size:12px;letter-spacing:.13em;text-transform:uppercase;opacity:.8;font-weight:700}h1{font-size:clamp(27px,4vw,38px);line-height:1.15;margin:8px 0}header p{max-width:650px;color:#e0e8ff;margin:10px 0 0}
+main{max-width:1150px;margin:-36px auto 50px;padding:0 18px}.tabs{display:flex;gap:8px;flex-wrap:wrap;background:var(--card);padding:9px;border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)}
 .tab{border:0;background:transparent;color:var(--muted);font:600 14px inherit;padding:12px 17px;border-radius:10px;cursor:pointer}.tab.active{background:var(--blue2);color:var(--blue)}
-.panel{display:none;margin-top:18px}.panel.active{display:block}.layout{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:23px;box-shadow:var(--shadow)}h2{font-size:21px;margin:0 0 5px}h3{font-size:16px;margin:0 0 10px}.sub{color:var(--muted);margin:0 0 20px;font-size:13px}
+.panel{display:none;margin-top:18px}.panel.active{display:block}.layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:23px;box-shadow:var(--shadow)}h2{font-size:21px;margin:0 0 5px}h3{font-size:16px;margin:0 0 10px}.sub{color:var(--muted);margin:0 0 20px;font-size:13px}
 label{display:block;font-weight:650;font-size:13px;margin:15px 0 6px}input,textarea,select{width:100%;border:1px solid #d8e0eb;border-radius:10px;padding:11px 12px;font:14px inherit;color:var(--ink);background:#fff;outline:none}input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #315efb18}textarea{min-height:105px;resize:vertical}.hint{font-size:12px;color:var(--muted);margin-top:6px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.btn{border:0;border-radius:10px;padding:11px 17px;font-weight:700;cursor:pointer;background:var(--blue);color:#fff}.btn.secondary{background:#eef2f8;color:#40506a}.result{background:#f8faff;border:1px solid var(--line);border-radius:13px;padding:18px;margin-top:15px}.result.empty{color:var(--muted);font-size:14px}.metric{font-size:31px;font-weight:800;letter-spacing:-.04em;color:var(--blue);line-height:1.2}.metric-label{font-size:12px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.06em}.decision{font-weight:750;margin:12px 0 5px}.good{color:var(--green)}.bad{color:var(--red)}.details{font-size:13px;color:#536178;margin-top:10px}.pill{display:inline-block;background:#edf2fb;border-radius:30px;padding:4px 9px;font-size:11px;font-weight:700;color:#51617b;margin:3px 4px 3px 0}.note{border-left:3px solid #9bb1ff;padding:10px 12px;background:#f5f7ff;color:#53617b;font-size:12px;border-radius:0 8px 8px 0;margin-top:15px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.group{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px}.group-head{display:flex;justify-content:space-between;align-items:center;font-weight:700}.remove{border:0;background:#fff0f0;color:#b34242;border-radius:7px;padding:5px 9px;cursor:pointer}.footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 20px 35px}
-@media(max-width:760px){.layout{grid-template-columns:1fr}.card{padding:18px}.tab{flex:1;padding:11px 8px;font-size:12px}.two{grid-template-columns:1fr}}
+.chart-box{position:relative;margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-height:260px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.card{padding:18px}.tab{flex:1;padding:11px 8px;font-size:12px}.two{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<header><div class="wrap"><div class="eyebrow">Estatística sem complicação</div><h1>BioEstat</h1><p>Três testes estatísticos, explicados passo a passo. Insira seus dados, escolha o nível de significância e obtenha o resultado com uma interpretação objetiva.</p></div></header>
+<header><div class="wrap"><div class="eyebrow">Análise Estatística Visual</div><h1>BioEstat</h1><p>Realize testes de hipótese com cálculo computacional exato e visualização de gráficos interativos da distribuição dos dados.</p></div></header>
 <main>
 <nav class="tabs" aria-label="Testes estatísticos">
 <button class="tab active" data-tab="kw">Kruskal–Wallis</button><button class="tab" data-tab="sw">Shapiro–Wilk</button><button class="tab" data-tab="fisher">Exato de Fisher</button>
 </nav>
+
+<!-- PANEL: KRUSKAL-WALLIS -->
 <section id="kw" class="panel active">
 <div class="layout">
-<div class="card"><h2>Teste de Kruskal–Wallis</h2><p class="sub">Compare três ou mais grupos independentes quando não quiser assumir distribuição normal.</p>
-<div id="groups"></div><button class="btn secondary" id="addGroup" type="button">＋ Adicionar grupo</button>
+<div class="card"><h2>Teste de Kruskal–Wallis</h2><p class="sub">Compare três ou mais grupos independentes (não paramétrico).</p>
+<div id="groups"></div><button class="btn secondary" id="addGroup" type="button" style="margin-top:10px">＋ Adicionar grupo</button>
 <label for="kwAlpha">Nível de significância (α)</label><select id="kwAlpha"><option value=".05">5% (0,05)</option><option value=".01">1% (0,01)</option><option value=".10">10% (0,10)</option></select>
-<div class="hint">Digite os valores separados por vírgula, espaço ou quebra de linha. Cada campo representa um grupo independente.</div>
-<div class="actions"><button class="btn" id="runKW">Calcular Kruskal–Wallis</button><button class="btn secondary" id="demoKW">Usar exemplo</button></div>
+<div class="actions"><button class="btn" id="runKW">Calcular Kruskal–Wallis</button><button class="btn secondary" id="demoKW">Exemplo</button></div>
 </div>
-<div class="card"><h3>Resultado</h3><div id="kwResult" class="result empty">Insira os dados e clique em “Calcular” para visualizar o resultado.</div><div class="note">O teste avalia se há evidências de diferença entre pelo menos dois grupos. Um resultado significativo não identifica, sozinho, quais grupos diferem; para isso, use um pós-teste apropriado.</div></div>
+<div class="card"><h3>Resultado e Gráfico</h3><div id="kwResult" class="result empty">Insira os dados e clique em “Calcular”.</div>
+<div class="chart-box"><canvas id="chartKW"></canvas></div>
+<div class="note">O gráfico exibe o posto médio (Mean Rank) e a mediana de cada grupo para avaliação visual do desvio estatístico.</div></div>
 </div></section>
+
+<!-- PANEL: SHAPIRO-WILK -->
 <section id="sw" class="panel">
 <div class="layout">
-<div class="card"><h2>Teste de Shapiro–Wilk</h2><p class="sub">Verifique se uma amostra é compatível com uma distribuição normal.</p>
-<label for="swData">Valores da amostra</label><textarea id="swData" placeholder="Ex.: 12, 14, 15, 13, 16, 17, 14, 15"></textarea><div class="hint">Informe pelo menos 3 observações. Separe os valores por vírgula, espaço ou quebra de linha.</div>
+<div class="card"><h2>Teste de Shapiro–Wilk</h2><p class="sub">Verifique a aderência da amostra à distribuição normal.</p>
+<label for="swData">Valores da amostra</label><textarea id="swData" placeholder="Ex.: 12, 14, 15, 13, 16, 17, 14, 15"></textarea>
 <label for="swAlpha">Nível de significância (α)</label><select id="swAlpha"><option value=".05">5% (0,05)</option><option value=".01">1% (0,01)</option><option value=".10">10% (0,10)</option></select>
-<div class="actions"><button class="btn" id="runSW">Calcular Shapiro–Wilk</button><button class="btn secondary" id="demoSW">Usar exemplo</button></div>
+<div class="actions"><button class="btn" id="runSW">Calcular Shapiro–Wilk</button><button class="btn secondary" id="demoSW">Exemplo</button></div>
 </div>
-<div class="card"><h3>Resultado</h3><div id="swResult" class="result empty">Insira a amostra e clique em “Calcular”.</div><div class="note">Os cálculos são realizados no servidor pela biblioteca SciPy, que implementa o teste de Shapiro–Wilk. Para uso em pesquisa, documente o software e a versão utilizados e avalie também os pressupostos do seu estudo.</div></div>
+<div class="card"><h3>Resultado e Gráfico Q-Q</h3><div id="swResult" class="result empty">Insira a amostra e clique em “Calcular”.</div>
+<div class="chart-box"><canvas id="chartSW"></canvas></div>
+<div class="note"><b>Gráfico Q-Q Plot:</b> Se os pontos observados seguirem alinhados à reta de tendência, a amostra possui distribuição aproximadamente normal.</div></div>
 </div></section>
+
+<!-- PANEL: FISHER -->
 <section id="fisher" class="panel">
 <div class="layout">
-<div class="card"><h2>Teste exato de Fisher</h2><p class="sub">Avalie a associação entre duas variáveis categóricas em uma tabela 2 × 2, especialmente com frequências pequenas.</p>
-<div class="two"><div><label for="a">Grupo 1 · Evento</label><input id="a" type="number" min="0" step="1" value="1"></div><div><label for="b">Grupo 1 · Não evento</label><input id="b" type="number" min="0" step="1" value="9"></div><div><label for="c">Grupo 2 · Evento</label><input id="c" type="number" min="0" step="1" value="8"></div><div><label for="d">Grupo 2 · Não evento</label><input id="d" type="number" min="0" step="1" value="2"></div></div>
+<div class="card"><h2>Teste Exato de Fisher</h2><p class="sub">Avalie associação em tabelas de contingência 2 × 2.</p>
+<div class="two"><div><label for="a">Grupo 1 · Evento</label><input id="a" type="number" min="0" value="1"></div><div><label for="b">Grupo 1 · Não evento</label><input id="b" type="number" min="0" value="9"></div><div><label for="c">Grupo 2 · Evento</label><input id="c" type="number" min="0" value="8"></div><div><label for="d">Grupo 2 · Não evento</label><input id="d" type="number" min="0" value="2"></div></div>
 <label for="fisherTail">Hipótese alternativa</label><select id="fisherTail"><option value="two">Bilateral (qualquer associação)</option><option value="greater">Grupo 1 tem maior chance de evento</option><option value="less">Grupo 1 tem menor chance de evento</option></select>
 <label for="fisherAlpha">Nível de significância (α)</label><select id="fisherAlpha"><option value=".05">5% (0,05)</option><option value=".01">1% (0,01)</option><option value=".10">10% (0,10)</option></select>
-<div class="actions"><button class="btn" id="runFisher">Calcular Fisher</button><button class="btn secondary" id="demoFisher">Restaurar exemplo</button></div>
+<div class="actions"><button class="btn" id="runFisher">Calcular Fisher</button><button class="btn secondary" id="demoFisher">Restaurar</button></div>
 </div>
-<div class="card"><h3>Tabela de contingência</h3><div id="tablePreview" class="result"></div><h3 style="margin-top:18px">Resultado</h3><div id="fisherResult" class="result empty">Preencha a tabela 2 × 2 e clique em “Calcular”.</div></div>
+<div class="card"><h3>Resultado e Comparação</h3><div id="tablePreview" class="result" style="margin-bottom:12px"></div><div id="fisherResult" class="result empty">Preencha a tabela e clique em “Calcular”.</div>
+<div class="chart-box"><canvas id="chartFisher"></canvas></div></div>
 </div></section>
 </main>
-<div class="footer">BioEstat · Ferramenta educacional · Cálculos estatísticos via backend SciPy.</div>
-<script>
+<div class="footer">BioEstat · Ferramenta de Análise & Visualização Estatística · SciPy Backend</div>
 
+<script>
 const $=id=>document.getElementById(id);
+let activeCharts = {};
+
+// Gerenciamento de abas
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
   b.classList.add('active'); $(b.dataset.tab).classList.add('active');
 }));
+
 function parseVals(s){
   const tokens=s.trim().split(/[,\s;]+/).filter(Boolean);
   if(!tokens.length) return [];
   const vals=tokens.map(v=>Number(v.replace(',','.')));
-  if(vals.some(v=>!Number.isFinite(v))) throw Error('Há valores inválidos. Use apenas números.');
+  if(vals.some(v=>!Number.isFinite(v))) throw Error('Valores inválidos detectados.');
   return vals;
 }
-function fmt(x,d=6){return Number(x).toLocaleString('pt-BR',{maximumFractionDigits:d});}
+function fmt(x,d=4){return Number(x).toLocaleString('pt-BR',{maximumFractionDigits:d});}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
 function resultHTML(stat,p,alpha,statLabel,extra=''){
   const reject=p<alpha;
-  return `<div class="metric">${fmt(stat,6)}</div><div class="metric-label">${statLabel}</div>
-  <p><span class="pill">p-valor = ${fmt(p,8)}</span><span class="pill">α = ${fmt(alpha,2)}</span></p>
-  <div class="decision ${reject?'bad':'good'}">${reject?'Resultado estatisticamente significativo':'Resultado não estatisticamente significativo'}</div>
-  <div class="details">${reject?'Rejeita-se a hipótese nula (H₀), ao nível de significância escolhido.':'Não se rejeita a hipótese nula (H₀), ao nível de significância escolhido.'} ${extra}</div>`;
+  return `<div class="metric">${fmt(stat,4)}</div><div class="metric-label">${statLabel}</div>
+  <p><span class="pill">p-valor = ${fmt(p,6)}</span><span class="pill">α = ${fmt(alpha,2)}</span></p>
+  <div class="decision ${reject?'bad':'good'}">${reject?'Diferença / Associação Estatisticamente Significativa':'Sem Diferença Estatisticamente Significativa'}</div>
+  <div class="details">${reject?'Rejeita-se H₀. Há evidências estatísticas ao nível configurado.':'Não se rejeita H₀.'} ${extra}</div>`;
 }
+
 async function calculate(payload){
   const response=await fetch('/api/calculate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  const data=await response.json().catch(()=>({error:'Resposta inválida do servidor.'}));
-  if(!response.ok) throw Error(data.error||'Não foi possível realizar o cálculo.');
+  const data=await response.json().catch(()=>({error:'Erro na resposta do servidor.'}));
+  if(!response.ok) throw Error(data.error||'Erro ao processar cálculo.');
   return data;
 }
-function showError(id,e){$(id).className='result';$(id).innerHTML=`<span class="bad">${esc(e.message||'Erro inesperado.')}</span>`;}
+
+function clearChart(id){
+  if(activeCharts[id]){ activeCharts[id].destroy(); delete activeCharts[id]; }
+}
+
+// --- KRUSKAL-WALLIS ---
 let groupCount=0;
 function addGroup(name='',values=''){
   groupCount++;const div=document.createElement('div');div.className='group';
   div.innerHTML=`<div class="group-head"><span>Grupo ${groupCount}</span><button type="button" class="remove">Remover</button></div>
-  <label>Nome do grupo</label><input class="gname" value="${esc(name||'Grupo '+groupCount)}" aria-label="Nome do grupo">
+  <label>Nome do grupo</label><input class="gname" value="${esc(name||'Grupo '+groupCount)}">
   <label>Valores</label><textarea class="gvalues" placeholder="Ex.: 12, 15, 18">${esc(values)}</textarea>`;
-  div.querySelector('.remove').onclick=()=>{if(document.querySelectorAll('#groups .group').length>2)div.remove();else alert('O Kruskal–Wallis exige pelo menos dois grupos.');};
+  div.querySelector('.remove').onclick=()=>{if(document.querySelectorAll('#groups .group').length>2)div.remove();else alert('Mínimo 2 grupos.');};
   $('groups').appendChild(div);
 }
 addGroup('Grupo A');addGroup('Grupo B');addGroup('Grupo C');$('addGroup').onclick=()=>addGroup();
 $('demoKW').onclick=()=>{const gs=document.querySelectorAll('#groups .group');['12, 14, 13, 15, 16','18, 19, 17, 20, 21','11, 10, 12, 9, 13'].forEach((v,i)=>gs[i].querySelector('.gvalues').value=v);};
+
 $('runKW').onclick=async()=>{
-  const out=$('kwResult');out.className='result';out.textContent='Calculando…';
+  $('kwResult').innerHTML='Calculando…';
   try{
     const groups=[...document.querySelectorAll('#groups .group')].map(g=>({name:g.querySelector('.gname').value||'Grupo',values:parseVals(g.querySelector('.gvalues').value)}));
-    if(groups.some(g=>!g.values.length))throw Error('Preencha todos os grupos ou remova os grupos que não serão utilizados.');
     const alpha=Number($('kwAlpha').value),r=await calculate({test:'kruskal',groups,alpha});
-    const detail=`Graus de liberdade: ${r.df}. Número total de observações: ${r.n}. Correção para empates: ${fmt(r.tie_correction,6)}.<br>`+r.groups.map(g=>`${esc(g.name)}: n=${g.n}, média dos postos=${fmt(g.mean_rank,4)}`).join('<br>');
-    out.innerHTML=resultHTML(r.statistic,r.p_value,alpha,'Estatística H',detail);
-  }catch(e){showError('kwResult',e);}
+    $('kwResult').innerHTML=resultHTML(r.statistic,r.p_value,alpha,'Estatística H de Kruskal-Wallis',`N total = ${r.n}. Graus de liberdade = ${r.df}.`);
+    
+    // Gráfico de Postos Médios e Medianas
+    clearChart('chartKW');
+    const ctx = $('chartKW').getContext('2d');
+    activeCharts['chartKW'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: r.chart.data.map(d=>d.name),
+        datasets: [{
+          label: 'Posto Médio (Mean Rank)',
+          data: r.chart.data.map(d=>d.mean_rank),
+          backgroundColor: '#315efb'
+        },{
+          label: 'Mediana Observada',
+          data: r.chart.data.map(d=>d.median),
+          backgroundColor: '#16845b'
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }catch(e){$('kwResult').innerHTML=`<span class="bad">${esc(e.message)}</span>`;}
 };
-$('demoSW').onclick=()=>{$('swData').value='118, 120, 119, 121, 117, 122, 120, 119, 121, 118, 120, 119, 122, 117, 121, 120, 118, 119, 121, 120';};
+
+// --- SHAPIRO-WILK ---
+$('demoSW').onclick=()=>{$('swData').value='118, 120, 119, 121, 117, 122, 120, 119, 121, 118, 120, 119, 122, 117, 121, 120';};
 $('runSW').onclick=async()=>{
-  const out=$('swResult');out.className='result';out.textContent='Calculando…';
-  try{const values=parseVals($('swData').value),alpha=Number($('swAlpha').value),r=await calculate({test:'shapiro',values,alpha});
-    out.innerHTML=resultHTML(r.statistic,r.p_value,alpha,'Estatística W',`Tamanho da amostra: n = ${r.n}. Cálculo realizado pela implementação SciPy do teste de Shapiro–Wilk.`);
-  }catch(e){showError('swResult',e);}
+  $('swResult').innerHTML='Calculando…';
+  try{
+    const values=parseVals($('swData').value),alpha=Number($('swAlpha').value),r=await calculate({test:'shapiro',values,alpha});
+    $('swResult').innerHTML=resultHTML(r.statistic,r.p_value,alpha,'Estatística W de Shapiro-Wilk',`Média: ${fmt(r.summary.mean)} | Mediana: ${fmt(r.summary.median)} | DP: ${fmt(r.summary.std)}`);
+    
+    // Renderizar Q-Q Plot em Chart.js
+    clearChart('chartSW');
+    const ctx = $('chartSW').getContext('2d');
+    const points = r.chart.observed.map((obs, i) => ({ x: r.chart.theoretical[i], y: obs }));
+    const trend = r.chart.theoretical.map((th, i) => ({ x: th, y: r.chart.trendline[i] }));
+
+    activeCharts['chartSW'] = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Quantis Observados',
+          data: points,
+          backgroundColor: '#315efb'
+        },{
+          label: 'Linha Teórica Normal',
+          data: trend,
+          type: 'line',
+          borderColor: '#c04444',
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: 'Quantis Teóricos' } },
+          y: { title: { display: true, text: 'Valores Observados' } }
+        }
+      }
+    });
+  }catch(e){$('swResult').innerHTML=`<span class="bad">${esc(e.message)}</span>`;}
 };
+
+// --- FISHER ---
 function updateFisherTable(){
   const vals=['a','b','c','d'].map(id=>Number($(id).value)||0);
   $('tablePreview').innerHTML=`<table style="width:100%;border-collapse:collapse;text-align:center"><tr><th></th><th>Evento</th><th>Não evento</th></tr><tr><th>Grupo 1</th><td>${vals[0]}</td><td>${vals[1]}</td></tr><tr><th>Grupo 2</th><td>${vals[2]}</td><td>${vals[3]}</td></tr></table>`;
 }
 ['a','b','c','d'].forEach(id=>$(id).addEventListener('input',updateFisherTable));updateFisherTable();
-$('demoFisher').onclick=()=>{[['a',1],['b',9],['c',8],['d',2]].forEach(([id,v])=>$(id).value=v);$('fisherTail').value='two';updateFisherTable();};
+$('demoFisher').onclick=()=>{[['a',1],['b',9],['c',8],['d',2]].forEach(([id,v])=>$(id).value=v);updateFisherTable();};
+
 $('runFisher').onclick=async()=>{
-  const out=$('fisherResult');out.className='result';out.textContent='Calculando…';
+  $('fisherResult').innerHTML='Calculando…';
   try{
     const cells=['a','b','c','d'].map(id=>Number($(id).value)),alpha=Number($('fisherAlpha').value);
     const r=await calculate({test:'fisher',table:[[cells[0],cells[1]],[cells[2],cells[3]]],alternative:$('fisherTail').value,alpha});
-    out.innerHTML=resultHTML(r.odds_ratio??0,r.p_value,alpha,'Odds ratio (OR)',`Odds ratio amostral: ${r.odds_ratio===null?'indefinido (célula igual a zero)':fmt(r.odds_ratio,6)}. Total de participantes: ${r.n}.`);
-    if(r.odds_ratio===null)out.querySelector('.metric-label').textContent='Odds ratio (OR) — indefinido';
-  }catch(e){showError('fisherResult',e);}
+    $('fisherResult').innerHTML=resultHTML(r.odds_ratio??0,r.p_value,alpha,'Odds Ratio (OR)',`Taxa do Evento: Grupo 1 = ${fmt(r.chart.pct_g1,1)}% | Grupo 2 = ${fmt(r.chart.pct_g2,1)}%`);
+    
+    // Gráfico de Proporção de Evento
+    clearChart('chartFisher');
+    const ctx = $('chartFisher').getContext('2d');
+    activeCharts['chartFisher'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Grupo 1', 'Grupo 2'],
+        datasets: [{
+          label: '% de Eventos Ocorridos',
+          data: [r.chart.pct_g1, r.chart.pct_g2],
+          backgroundColor: ['#315efb', '#16845b']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { min: 0, max: 100, title: { display: true, text: 'Proporção (%)' } } }
+      }
+    });
+  }catch(e){$('fisherResult').innerHTML=`<span class="bad">${esc(e.message)}</span>`;}
 };
-async function checkBackend(){try{const r=await fetch('/api/health');if(!r.ok)throw Error();document.querySelector('.footer').textContent='BioEstat · Cálculos estatísticos realizados no servidor por SciPy · Conexão ativa';}catch(e){document.querySelector('.footer').textContent='BioEstat · Backend não conectado. Inicie o servidor seguindo o README.';}}
-checkBackend();
-
 </script>
 </body></html>
