@@ -15,7 +15,7 @@ main{max-width:1150px;margin:-36px auto 50px;padding:0 18px}.tabs{display:flex;g
 .tab{border:0;background:transparent;color:var(--muted);font:600 14px inherit;padding:12px 17px;border-radius:10px;cursor:pointer}.tab.active{background:var(--blue2);color:var(--blue)}
 .panel{display:none;margin-top:18px}.panel.active{display:block}.layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:23px;box-shadow:var(--shadow)}h2{font-size:21px;margin:0 0 5px}h3{font-size:16px;margin:0 0 10px}.sub{color:var(--muted);margin:0 0 20px;font-size:13px}
 label{display:block;font-weight:650;font-size:13px;margin:15px 0 6px}input,textarea,select{width:100%;border:1px solid #d8e0eb;border-radius:10px;padding:11px 12px;font:14px inherit;color:var(--ink);background:#fff;outline:none}input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #315efb18}textarea{min-height:105px;resize:vertical}.hint{font-size:12px;color:var(--muted);margin-top:6px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.btn{border:0;border-radius:10px;padding:11px 17px;font-weight:700;cursor:pointer;background:var(--blue);color:#fff}.btn.secondary{background:#eef2f8;color:#40506a}.result{background:#f8faff;border:1px solid var(--line);border-radius:13px;padding:18px;margin-top:15px}.result.empty{color:var(--muted);font-size:14px}.metric{font-size:31px;font-weight:800;letter-spacing:-.04em;color:var(--blue);line-height:1.2}.metric-label{font-size:12px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.06em}.decision{font-weight:750;margin:12px 0 5px}.good{color:var(--green)}.bad{color:var(--red)}.details{font-size:13px;color:#536178;margin-top:10px}.pill{display:inline-block;background:#edf2fb;border-radius:30px;padding:4px 9px;font-size:11px;font-weight:700;color:#51617b;margin:3px 4px 3px 0}.note{border-left:3px solid #9bb1ff;padding:10px 12px;background:#f5f7ff;color:#53617b;font-size:12px;border-radius:0 8px 8px 0;margin-top:15px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.group{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px}.group-head{display:flex;justify-content:space-between;align-items:center;font-weight:700}.remove{border:0;background:#fff0f0;color:#b34242;border-radius:7px;padding:5px 9px;cursor:pointer}.footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 20px 35px}
-.chart-box{position:relative;margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-height:260px}
+.calc-panel{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:13px}.calc-panel label{margin:0 0 7px}.calc-panel select{max-width:240px}.calc-steps{font-size:13px;color:#46546b;padding-left:20px;margin:10px 0 0}.calc-steps li{margin:7px 0;overflow-wrap:anywhere}.posthoc{margin-top:14px;overflow-x:auto}.posthoc table{width:100%;border-collapse:collapse;font-size:12px}.posthoc th,.posthoc td{padding:7px;border-bottom:1px solid var(--line);text-align:left}.chart-box{position:relative;margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-height:260px}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.card{padding:18px}.tab{flex:1;padding:11px 8px;font-size:12px}.two{grid-template-columns:1fr}}
 </style>
 </head>
@@ -95,6 +95,23 @@ function resultHTML(stat,p,alpha,statLabel,extra=''){
   <div class="details">${reject?'Rejeita-se H₀. Há evidências estatísticas ao nível configurado.':'Não se rejeita H₀.'} ${extra}</div>`;
 }
 
+const calcModes={kw:'simplified',sw:'simplified',fisher:'simplified'};
+function calculationHTML(test, calculation){
+  if(!calculation) return '';
+  const mode=calcModes[test]||'simplified';
+  const steps=calculation[mode]||[];
+  return `<div class="calc-panel"><label for="calc-${test}">Demonstrar cálculo</label><select id="calc-${test}" data-calc-test="${test}"><option value="simplified" ${mode==='simplified'?'selected':''}>Cálculo simplificado</option><option value="complete" ${mode==='complete'?'selected':''}>Cálculo completo</option></select><ol class="calc-steps">${steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`;
+}
+function attachCalculation(test, result, calculation){
+  result.insertAdjacentHTML('beforeend',calculationHTML(test,calculation));
+  const select=result.querySelector(`[data-calc-test="${test}"]`);
+  if(select) select.addEventListener('change',()=>{calcModes[test]=select.value;const old=result.querySelector('.calc-panel');old.outerHTML=calculationHTML(test,calculation);attachCalcListener(test,result,calculation);});
+}
+function attachCalcListener(test,result,calculation){
+  const select=result.querySelector(`[data-calc-test="${test}"]`);
+  if(select)select.addEventListener('change',()=>{calcModes[test]=select.value;result.querySelector('.calc-panel').outerHTML=calculationHTML(test,calculation);attachCalcListener(test,result,calculation);});
+}
+
 async function calculate(payload){
   const response=await fetch('/api/calculate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   const data=await response.json().catch(()=>({error:'Erro na resposta do servidor.'}));
@@ -125,6 +142,8 @@ $('runKW').onclick=async()=>{
     const groups=[...document.querySelectorAll('#groups .group')].map(g=>({name:g.querySelector('.gname').value||'Grupo',values:parseVals(g.querySelector('.gvalues').value)}));
     const alpha=Number($('kwAlpha').value),r=await calculate({test:'kruskal',groups,alpha});
     $('kwResult').innerHTML=resultHTML(r.statistic,r.p_value,alpha,'Estatística H de Kruskal-Wallis',`N total = ${r.n}. Graus de liberdade = ${r.df}.`);
+    if(r.dunn?.length){$('kwResult').insertAdjacentHTML('beforeend',`<div class="posthoc"><b>Pós-teste de Dunn — ajuste de Holm</b><table><thead><tr><th>Comparação</th><th>p bruto</th><th>p ajustado</th><th>Conclusão</th></tr></thead><tbody>${r.dunn.map(d=>`<tr><td>${esc(d.group1)} × ${esc(d.group2)}</td><td>${fmt(d.p_raw,6)}</td><td>${fmt(d.p_holm,6)}</td><td>${d.significant?'Significativa':'Não significativa'}</td></tr>`).join('')}</tbody></table></div>`);}
+    attachCalculation('kw',$('kwResult'),r.calculation);
     
     // Gráfico de Postos Médios e Medianas
     clearChart('chartKW');
@@ -155,6 +174,8 @@ $('runSW').onclick=async()=>{
   try{
     const values=parseVals($('swData').value),alpha=Number($('swAlpha').value),r=await calculate({test:'shapiro',values,alpha});
     $('swResult').innerHTML=resultHTML(r.statistic,r.p_value,alpha,'Estatística W de Shapiro-Wilk',`Média: ${fmt(r.summary.mean)} | Mediana: ${fmt(r.summary.median)} | DP: ${fmt(r.summary.std)}`);
+    $('swResult').insertAdjacentHTML('beforeend','<div class="note"><b>Importante:</b> não rejeitar H₀ não comprova que os dados seguem distribuição normal; significa apenas que o teste não encontrou evidência suficiente para rejeitá-la.</div>');
+    attachCalculation('sw',$('swResult'),r.calculation);
     
     // Renderizar Q-Q Plot em Chart.js
     clearChart('chartSW');
@@ -205,6 +226,8 @@ $('runFisher').onclick=async()=>{
     const cells=['a','b','c','d'].map(id=>Number($(id).value)),alpha=Number($('fisherAlpha').value);
     const r=await calculate({test:'fisher',table:[[cells[0],cells[1]],[cells[2],cells[3]]],alternative:$('fisherTail').value,alpha});
     $('fisherResult').innerHTML=resultHTML(r.odds_ratio??0,r.p_value,alpha,'Odds Ratio (OR)',`Taxa do Evento: Grupo 1 = ${fmt(r.chart.pct_g1,1)}% | Grupo 2 = ${fmt(r.chart.pct_g2,1)}%`);
+    if(r.confidence_interval){$('fisherResult').insertAdjacentHTML('beforeend',`<div class="details"><b>IC 95% condicional exato do OR:</b> ${fmt(r.confidence_interval.low,4)} a ${fmt(r.confidence_interval.high,4)}. Estimativa condicional: ${fmt(r.confidence_interval.estimate,4)}.</div>`);}else if(r.ci_note){$('fisherResult').insertAdjacentHTML('beforeend',`<div class="note">${esc(r.ci_note)}</div>`);}
+    attachCalculation('fisher',$('fisherResult'),r.calculation);
     
     // Gráfico de Proporção de Evento
     clearChart('chartFisher');
