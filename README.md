@@ -1,4 +1,4 @@
-# BioEstat — versão aprimorada para Render
+# BioEstat
 
 Aplicação web de testes estatísticos com backend Python, Flask e SciPy.
 A interface inclui gráficos interativos com Chart.js.
